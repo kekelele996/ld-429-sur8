@@ -1,24 +1,48 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArtworkInfoCard } from '../components/common/ArtworkInfoCard';
 import { GuideTooltip } from '../components/common/GuideTooltip';
 import { MiniMap } from '../components/common/MiniMap';
+import { VisitProgressCard } from '../components/common/VisitProgressCard';
 import { GalleryScene } from '../components/scene/GalleryScene';
 import { useFirstPersonController } from '../hooks/useFirstPersonController';
 import { useGalleryScene } from '../hooks/useGalleryScene';
 import { useVisitorTracking } from '../hooks/useVisitorTracking';
+import { useVisitProgress } from '../hooks/useVisitProgress';
 import { useArtworkStore } from '../stores/artworkStore';
+import { useExhibitionStore } from '../stores/exhibitionStore';
 import { useGuideStore } from '../stores/guideStore';
+import { useRoomStore } from '../stores/roomStore';
 
 export function GalleryWalk() {
   const { room, artworks } = useGalleryScene();
   const activeArtworkId = useArtworkStore((state) => state.activeArtworkId);
+  const setActiveArtwork = useArtworkStore((state) => state.setActiveArtwork);
   const activeArtwork = useArtworkStore((state) => state.artworks.find((artwork) => artwork.id === activeArtworkId));
   const annotation = useGuideStore((state) => state.annotations.find((item) => item.artworkId === activeArtworkId));
   const { hintVisible, velocity } = useFirstPersonController();
   useVisitorTracking(activeArtworkId);
+  const visit = useVisitProgress(activeArtworkId);
+
+  const activeExhibitionId = useExhibitionStore((state) => state.activeExhibitionId);
+  const selectedRoomId = useRoomStore((state) => state.selectedRoomId);
+  const selectRoom = useRoomStore((state) => state.selectRoom);
+
+  const exhibitionRoomIds = visit.stops.map((stop) => stop.room.id);
+  const exhibitionRoomKey = exhibitionRoomIds.join(',');
+  const nextRoomId = visit.nextStop?.room.id;
+
+  // 保证漫游停留在当前选定展览的展厅内；重开浏览器时直接落到下一件作品所在的展厅接着看
+  useEffect(() => {
+    if (visit.totalCount === 0) return;
+    const roomIds = exhibitionRoomKey ? exhibitionRoomKey.split(',') : [];
+    if (roomIds.includes(selectedRoomId)) return;
+    const targetRoomId = (nextRoomId && roomIds.includes(nextRoomId) ? nextRoomId : roomIds[0]);
+    if (targetRoomId) selectRoom(targetRoomId);
+  }, [activeExhibitionId, selectedRoomId, exhibitionRoomKey, nextRoomId, visit.totalCount, selectRoom]);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
+    <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
       <section className="relative min-h-[70vh] overflow-hidden border border-[var(--color-line)] bg-black">
         <GalleryScene />
         <div className="pointer-events-none absolute left-4 top-4 border border-white/30 bg-black/50 px-3 py-2 text-sm text-white">
@@ -26,8 +50,9 @@ export function GalleryWalk() {
         </div>
       </section>
       <aside className="space-y-4">
+        <VisitProgressCard currentArtworkId={activeArtworkId} onSelectArtwork={setActiveArtwork} />
         {room && <MiniMap room={room} artworks={artworks} />}
-        {activeArtwork ? <ArtworkInfoCard artwork={activeArtwork} /> : null}
+        {activeArtwork ? <ArtworkInfoCard artwork={activeArtwork} onSelectArtwork={setActiveArtwork} /> : null}
         {annotation ? <GuideTooltip annotation={annotation} /> : null}
         <Link className="block border border-[var(--color-line)] p-4 text-center text-sm uppercase tracking-[0.2em] hover:bg-[var(--color-panel)]" to="/editor">
           Open room editor

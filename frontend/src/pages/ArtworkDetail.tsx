@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArtworkInfoCard } from '../components/common/ArtworkInfoCard';
 import { GuideTooltip } from '../components/common/GuideTooltip';
+import { VisitProgressCard } from '../components/common/VisitProgressCard';
 import { EmptyState } from '../components/common/EmptyState';
 import { useArtworkStore } from '../stores/artworkStore';
 import { useGuideStore } from '../stores/guideStore';
@@ -40,6 +41,7 @@ export function ArtworkDetail() {
       </section>
       <aside className="space-y-4">
         <ArtworkInfoCard artwork={artwork} />
+        <VisitProgressCard currentArtworkId={artwork.id} />
         {annotations
           .filter((annotation) => annotation.artworkId === artwork.id)
           .map((annotation) => (

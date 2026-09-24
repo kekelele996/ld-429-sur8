@@ -1,7 +1,17 @@
 import type { Artwork } from '../../types';
 import { FRAME_STYLE_LABELS } from '../../constants/frameStyles';
+import { VisitProgressStrip } from './VisitProgressStrip';
 
-export function ArtworkInfoCard({ artwork, compact = false }: { artwork: Artwork; compact?: boolean }) {
+export function ArtworkInfoCard({
+  artwork,
+  compact = false,
+  onSelectArtwork,
+}: {
+  artwork: Artwork;
+  compact?: boolean;
+  /** 漫游页传入后，下一件作品就地切换；否则跳转作品详情页 */
+  onSelectArtwork?: (artworkId: string) => void;
+}) {
   return (
     <article className="panel p-5">
       <div className="overflow-hidden border border-[var(--color-line)] bg-black/5">
@@ -21,6 +31,7 @@ export function ArtworkInfoCard({ artwork, compact = false }: { artwork: Artwork
             </span>
           ))}
         </div>
+        <VisitProgressStrip artwork={artwork} onSelectArtwork={onSelectArtwork} />
       </div>
     </article>
   );

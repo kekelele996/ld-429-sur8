@@ -11,7 +11,7 @@ interface ArtworkState {
 
 export const useArtworkStore = create<ArtworkState>((set) => ({
   artworks,
-  activeArtworkId: artworks[0]?.id,
+  activeArtworkId: undefined,
   setActiveArtwork: (artworkId) => set({ activeArtworkId: artworkId }),
   moveArtwork: (artworkId, roomId) =>
     set((state) => ({

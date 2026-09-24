@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom';
 import { ArtworkInfoCard } from '../components/common/ArtworkInfoCard';
 import { GuideTooltip } from '../components/common/GuideTooltip';
 import { MiniMap } from '../components/common/MiniMap';
+import { VisitProgressCard } from '../components/common/VisitProgressCard';
 import { GalleryScene } from '../components/scene/GalleryScene';
 import { useFirstPersonController } from '../hooks/useFirstPersonController';
 import { useGalleryScene } from '../hooks/useGalleryScene';
 import { useVisitorTracking } from '../hooks/useVisitorTracking';
+import { useRecordArtworkView, useVisitProgress } from '../hooks/useVisitProgress';
 import { useArtworkStore } from '../stores/artworkStore';
 import { useGuideStore } from '../stores/guideStore';
 
@@ -15,7 +17,9 @@ export function GalleryWalk() {
   const activeArtwork = useArtworkStore((state) => state.artworks.find((artwork) => artwork.id === activeArtworkId));
   const annotation = useGuideStore((state) => state.annotations.find((item) => item.artworkId === activeArtworkId));
   const { hintVisible, velocity } = useFirstPersonController();
+  const progress = useVisitProgress();
   useVisitorTracking(activeArtworkId);
+  useRecordArtworkView(activeArtwork ? activeArtworkId : undefined);
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1fr_340px]">
@@ -26,6 +30,15 @@ export function GalleryWalk() {
         </div>
       </section>
       <aside className="space-y-4">
+        {progress ? (
+          <VisitProgressCard
+            exhibition={progress.exhibition}
+            viewedCount={progress.viewedCount}
+            totalCount={progress.totalCount}
+            nextArtwork={progress.nextArtwork}
+            trackable={progress.trackable}
+          />
+        ) : null}
         {room && <MiniMap room={room} artworks={artworks} />}
         {activeArtwork ? <ArtworkInfoCard artwork={activeArtwork} /> : null}
         {annotation ? <GuideTooltip annotation={annotation} /> : null}

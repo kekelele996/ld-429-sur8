@@ -3,9 +3,11 @@ import { useParams } from 'react-router-dom';
 import { ArtworkInfoCard } from '../components/common/ArtworkInfoCard';
 import { GuideTooltip } from '../components/common/GuideTooltip';
 import { EmptyState } from '../components/common/EmptyState';
+import { VisitProgressCard } from '../components/common/VisitProgressCard';
 import { useArtworkStore } from '../stores/artworkStore';
 import { useGuideStore } from '../stores/guideStore';
 import { useVisitorTracking } from '../hooks/useVisitorTracking';
+import { useRecordArtworkView, useVisitProgress } from '../hooks/useVisitProgress';
 
 export function ArtworkDetail() {
   const { id } = useParams();
@@ -13,7 +15,9 @@ export function ArtworkDetail() {
   const artworks = useArtworkStore((state) => state.artworks);
   const annotations = useGuideStore((state) => state.annotations);
   const artwork = useMemo(() => artworks.find((item) => item.id === id), [artworks, id]);
+  const progress = useVisitProgress();
   useVisitorTracking(artwork?.id);
+  useRecordArtworkView(artwork?.id);
 
   if (!artwork) {
     return <EmptyState title="未找到作品" description="当前作品可能已经移出展览，返回展览列表继续浏览。" />;
@@ -39,6 +43,15 @@ export function ArtworkDetail() {
         </div>
       </section>
       <aside className="space-y-4">
+        {progress ? (
+          <VisitProgressCard
+            exhibition={progress.exhibition}
+            viewedCount={progress.viewedCount}
+            totalCount={progress.totalCount}
+            nextArtwork={progress.nextArtwork}
+            trackable={progress.trackable}
+          />
+        ) : null}
         <ArtworkInfoCard artwork={artwork} />
         {annotations
           .filter((annotation) => annotation.artworkId === artwork.id)
